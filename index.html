@@ -135,8 +135,8 @@
     </header>
 
     <!-- Main Content Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="flex items-center justify-between mb-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <div class="flex items-center justify-between">
             <div>
                 <h2 class="text-xl font-bold text-white flex items-center gap-2">
                     <i class="fa-solid fa-layer-group text-blue-400"></i>
@@ -228,34 +228,60 @@
                     <span class="group-hover:translate-x-[-4px] transition-transform flex items-center gap-1.5 text-blue-400">
                         عرض التفاصيل <i class="fa-solid fa-arrow-left text-[10px]"></i>
                     </span>
-                    <i class="fa-solid fa-spinner animate-spin-slow opacity-40"></i>
+                    <i class="fa-solid fa-spinner opacity-40"></i>
                 </div>
             </div>
 
         </div>
 
-        <!-- Summary Highlights Box -->
-        <div class="mt-10 glass-panel rounded-3xl p-6 sm:p-8 border border-slate-800/80">
+        <!-- Section 1: Summary Highlights Box (Old Projects) -->
+        <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-slate-800/80">
             <h3 class="text-md font-bold text-white mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-chart-line text-emerald-400"></i>
-                ملخص المبالغ والعمولات والتحصيلات التقديرية
+                <i class="fa-solid fa-box-archive text-slate-400"></i>
+                ملخص المبالغ والعمولات (المشروعات القديمة)
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
                     <p class="text-xs text-slate-400">إجمالي بدون ضريبة</p>
-                    <p class="text-xl font-extrabold text-blue-400 mt-1" id="sumNoTax">0 ر.س</p>
+                    <p class="text-xl font-extrabold text-blue-400 mt-1" id="oldSumNoTax">0 ر.س</p>
                 </div>
                 <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
                     <p class="text-xs text-slate-400">إجمالي المبالغ الشاملة</p>
-                    <p class="text-xl font-extrabold text-indigo-400 mt-1" id="sumTotal">0 ر.س</p>
+                    <p class="text-xl font-extrabold text-indigo-400 mt-1" id="oldSumTotal">0 ر.س</p>
                 </div>
                 <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
                     <p class="text-xs text-slate-400">إجمالي العمولات (3.5%)</p>
-                    <p class="text-xl font-extrabold text-amber-400 mt-1" id="sumCommission">0 ر.س</p>
+                    <p class="text-xl font-extrabold text-amber-400 mt-1" id="oldSumCommission">0 ر.س</p>
                 </div>
                 <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
                     <p class="text-xs text-slate-400">إجمالي الدفعات الأولى المحصلة</p>
-                    <p class="text-xl font-extrabold text-emerald-400 mt-1" id="sumP1">0 ر.س</p>
+                    <p class="text-xl font-extrabold text-emerald-400 mt-1" id="oldSumP1">0 ر.س</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Summary Highlights Box (New/Approved Projects) - ADDED EXACT MATCH -->
+        <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-emerald-500/20 bg-emerald-950/10">
+            <h3 class="text-md font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                ملخص المبالغ والعمولات (المشروعات الجديدة المعتمدة)
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                    <p class="text-xs text-slate-400">إجمالي بدون ضريبة</p>
+                    <p class="text-xl font-extrabold text-emerald-400 mt-1" id="newSumNoTax">0 ر.س</p>
+                </div>
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                    <p class="text-xs text-slate-400">إجمالي المبالغ الشاملة</p>
+                    <p class="text-xl font-extrabold text-indigo-400 mt-1" id="newSumTotal">0 ر.س</p>
+                </div>
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                    <p class="text-xs text-slate-400">إجمالي العمولات (3.5%)</p>
+                    <p class="text-xl font-extrabold text-amber-400 mt-1" id="newSumCommission">0 ر.س</p>
+                </div>
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                    <p class="text-xs text-slate-400">إجمالي الدفعات الأولى المحصلة</p>
+                    <p class="text-xl font-extrabold text-teal-400 mt-1" id="newSumP1">0 ر.س</p>
                 </div>
             </div>
         </div>
@@ -400,7 +426,6 @@
                         <input type="text" id="newLocation" placeholder="الرياض - حي النرجس" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
                     </div>
 
-                    <!-- حقول الحساب التلقائي والعمولة والسداد الكاش -->
                     <div>
                         <label class="block text-xs font-semibold text-emerald-400 mb-1">مبلغ بدون ضريبة (تلقائي/يدوي)</label>
                         <input type="number" step="any" id="newAmountNoTax" oninput="calculateFromNoTax()" placeholder="50000" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono">
@@ -440,7 +465,6 @@
                     <textarea id="newNotes" rows="2" placeholder="أدخل أي ملاحظات إضافية هنا..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500"></textarea>
                 </div>
 
-                <!-- Payment 1 quick entry -->
                 <div class="p-3 bg-slate-950 rounded-2xl border border-slate-800 grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs text-amber-300 font-semibold mb-1">الدفعة الأولى</label>
@@ -461,8 +485,8 @@
     </div>
 
     <script>
-        // Data Store
-        let projectsData = [
+        // Initial Default Data Seed
+        const defaultProjects = [
             {
                 id: 1,
                 category: "المشروعات القديمة",
@@ -511,6 +535,27 @@
             }
         ];
 
+        // Persistent LocalStorage Helper Functions
+        function loadProjectsData() {
+            const saved = localStorage.getItem('taha_projects_data');
+            if (saved) {
+                try {
+                    return JSON.parse(saved);
+                } catch(e) {
+                    return defaultProjects;
+                }
+            } else {
+                localStorage.setItem('taha_projects_data', JSON.stringify(defaultProjects));
+                return defaultProjects;
+            }
+        }
+
+        function saveProjectsDataToStorage() {
+            localStorage.setItem('taha_projects_data', JSON.stringify(projectsData));
+        }
+
+        // Initialize Store
+        let projectsData = loadProjectsData();
         let currentCategory = "";
 
         // Automatic Math Calculations Engine
@@ -553,7 +598,7 @@
             updateCommission(noTaxVal);
         }
 
-        // Init
+        // Init App
         document.addEventListener("DOMContentLoaded", () => {
             updateCountsAndStats();
         });
@@ -571,27 +616,33 @@
 
             document.getElementById('totalProjectsCount').innerText = projectsData.length;
 
-            let totalNoTax = 0;
-            let totalOverall = 0;
-            let totalCommission = 0;
-            let totalP1 = 0;
-
-            projectsData.forEach(p => {
-                let noTax = parseFloat((p.amountNoTax || '0').toString().replace(/,/g, '')) || 0;
-                let tot = parseFloat((p.totalAmount || '0').toString().replace(/,/g, '')) || 0;
-                let comm = parseFloat((p.commission || '0').toString().replace(/,/g, '')) || 0;
-                let p1Val = parseFloat((p.payments[0]?.p || '0').toString().replace(/,/g, '')) || 0;
-
-                totalNoTax += noTax;
-                totalOverall += tot;
-                totalCommission += comm;
-                totalP1 += p1Val;
+            // 1. Calculate Old Projects Totals
+            let oldNoTax = 0, oldTotal = 0, oldCommission = 0, oldP1 = 0;
+            projectsData.filter(p => p.category === 'المشروعات القديمة').forEach(p => {
+                oldNoTax += parseFloat((p.amountNoTax || '0').toString().replace(/,/g, '')) || 0;
+                oldTotal += parseFloat((p.totalAmount || '0').toString().replace(/,/g, '')) || 0;
+                oldCommission += parseFloat((p.commission || '0').toString().replace(/,/g, '')) || 0;
+                oldP1 += parseFloat((p.payments[0]?.p || '0').toString().replace(/,/g, '')) || 0;
             });
 
-            document.getElementById('sumNoTax').innerText = totalNoTax.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' ر.س';
-            document.getElementById('sumTotal').innerText = totalOverall.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' ر.س';
-            document.getElementById('sumCommission').innerText = totalCommission.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' ر.س';
-            document.getElementById('sumP1').innerText = totalP1.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' ر.س';
+            document.getElementById('oldSumNoTax').innerText = oldNoTax.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' ر.س';
+            document.getElementById('oldSumTotal').innerText = oldTotal.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' ر.س';
+            document.getElementById('oldSumCommission').innerText = oldCommission.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' ر.س';
+            document.getElementById('oldSumP1').innerText = oldP1.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' ر.س';
+
+            // 2. Calculate New Approved Projects Totals
+            let newNoTax = 0, newTotal = 0, newCommission = 0, newP1 = 0;
+            projectsData.filter(p => p.category === 'المشروعات الجديدة (المعتمدة)').forEach(p => {
+                newNoTax += parseFloat((p.amountNoTax || '0').toString().replace(/,/g, '')) || 0;
+                newTotal += parseFloat((p.totalAmount || '0').toString().replace(/,/g, '')) || 0;
+                newCommission += parseFloat((p.commission || '0').toString().replace(/,/g, '')) || 0;
+                newP1 += parseFloat((p.payments[0]?.p || '0').toString().replace(/,/g, '')) || 0;
+            });
+
+            document.getElementById('newSumNoTax').innerText = newNoTax.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' ر.س';
+            document.getElementById('newSumTotal').innerText = newTotal.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' ر.س';
+            document.getElementById('newSumCommission').innerText = newCommission.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' ر.س';
+            document.getElementById('newSumP1').innerText = newP1.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' ر.س';
         }
 
         function openDrawer(categoryTitle, colorTheme) {
@@ -625,7 +676,7 @@
             document.body.style.overflow = 'auto';
         }
 
-        function renderTableData(category, filterText = '') {
+        function renderTableData(category, filterText = '', paymentFilter = 'all') {
             const tbody = document.getElementById('projectsTableBody');
             tbody.innerHTML = '';
 
@@ -634,11 +685,15 @@
             if (filterText.trim() !== '') {
                 const term = filterText.toLowerCase();
                 filtered = filtered.filter(p => 
-                    p.client.toLowerCase().includes(term) ||
-                    p.project.toLowerCase().includes(term) ||
-                    p.location.toLowerCase().includes(term) ||
-                    p.phone.includes(term)
+                    (p.client && p.client.toLowerCase().includes(term)) ||
+                    (p.project && p.project.toLowerCase().includes(term)) ||
+                    (p.location && p.location.toLowerCase().includes(term)) ||
+                    (p.phone && p.phone.includes(term))
                 );
+            }
+
+            if (paymentFilter === 'paid') {
+                filtered = filtered.filter(p => p.payments && p.payments[0] && p.payments[0].p && p.payments[0].p !== '-');
             }
 
             document.getElementById('visibleCount').innerText = filtered.length;
@@ -656,7 +711,7 @@
             }
 
             filtered.forEach((item) => {
-                let payList = item.payments || [];
+                let payList = item.payments ? [...item.payments] : [];
                 while (payList.length < 7) {
                     payList.push({ p: '-', d: '-' });
                 }
@@ -713,7 +768,8 @@
         }
 
         function filterByPayment(type) {
-            renderTableData(currentCategory);
+            const val = document.getElementById('searchInput').value;
+            renderTableData(currentCategory, val, type);
         }
 
         function toggleFullscreenDrawer() {
@@ -783,6 +839,7 @@
             };
 
             projectsData.push(newObj);
+            saveProjectsDataToStorage(); // Save permanently
             updateCountsAndStats();
             closeAddProjectModal();
             document.getElementById('addProjectForm').reset();
@@ -795,6 +852,7 @@
         function deleteProject(id) {
             if (confirm('هل أنت تأكد من حذف هذا المشروع؟')) {
                 projectsData = projectsData.filter(p => p.id !== id);
+                saveProjectsDataToStorage(); // Save permanently
                 updateCountsAndStats();
                 renderTableData(currentCategory);
             }
