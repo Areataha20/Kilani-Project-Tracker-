@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام متابعة المشاريع - طه الكيلاني</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Cairo & Tajawal -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0f172a',
+                            cardBg: 'rgba(30, 41, 59, 0.7)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a, #020617);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism utility */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Card Glows */
+        .glow-slate:hover { box-shadow: 0 15px 35px -5px rgba(100, 116, 139, 0.4), 0 0 15px rgba(100, 116, 139, 0.2); }
+        .glow-emerald:hover { box-shadow: 0 15px 35px -5px rgba(16, 185, 129, 0.4), 0 0 20px rgba(16, 185, 129, 0.2); }
+        .glow-amber:hover { box-shadow: 0 15px 35px -5px rgba(245, 158, 11, 0.4), 0 0 20px rgba(245, 158, 11, 0.2); }
+        .glow-blue:hover { box-shadow: 0 15px 35px -5px rgba(59, 130, 246, 0.4), 0 0 20px rgba(59, 130, 246, 0.2); }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Slide Drawer Animation */
+        .drawer-overlay {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .drawer-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .drawer-panel {
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .drawer-overlay.active .drawer-panel {
+            transform: translateX(0);
+        }
+
+        /* Table sticky headers & custom design */
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printableTableSection, #printableTableSection * {
+                visibility: visible;
+            }
+            #printableTableSection {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                color: black !important;
+                background: white !important;
+            }
+            th {
+                background-color: #f1f5f9 !important;
+                color: black !important;
+            }
+            td {
+                color: black !important;
+                border-color: #cbd5e1 !important;
+            }
+        }
+    </style>
+</head>
+<body class="selection:bg-blue-500 selection:text-white">
+
+    <!-- Navigation / Header -->
+    <header class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
+        <div class="glass-panel rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
+            <!-- Decorative Glow Backgrounds -->
+            <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="flex items-center space-x-5 space-x-reverse text-right">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-2 ring-white/20">
+                    <i class="fa-solid fa-chart-diagram text-2xl text-white"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            منظومة الإدارة والمتابعة
+                        </span>
+                        <span class="text-xs text-slate-400"><i class="fa-regular fa-clock ml-1"></i>2026</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-1">
+                        نظام متابعة المشاريع — <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-emerald-400">طه الكيلاني</span>
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Quick Stats / Actions Header -->
+            <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                <button onclick="openAddProjectModal()" class="w-full sm:w-auto px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all duration-200 flex items-center justify-center gap-2 active:scale-95">
+                    <i class="fa-solid fa-plus text-base"></i>
+                    <span>إضافة مشروع جديد</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Section Title -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-blue-400"></i>
+                    حالات المشاريع الرئيسية
+                </h2>
+                <p class="text-sm text-slate-400 mt-1">اضغط على أي بطاقة لاستعراض سجل المشاريع والبيانات بالتفصيل</p>
+            </div>
+            <span class="text-xs bg-slate-800 text-slate-300 px-3 py-1.5 rounded-xl border border-slate-700">
+                إجمالي المشاريع: <strong id="totalProjectsCount" class="text-blue-400 font-bold">0</strong>
+            </span>
+        </div>
+
+        <!-- 4 Interactive Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+            <!-- Card 1: المشروعات القديمة -->
+            <div onclick="openDrawer('المشروعات القديمة', 'slate')" 
+                 class="glass-card glow-slate rounded-3xl p-6 cursor-pointer relative overflow-hidden group">
+                <div class="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-slate-500 to-indigo-600"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center text-slate-300 group-hover:bg-slate-700 group-hover:text-white transition-all shadow-inner">
+                        <i class="fa-solid fa-box-archive text-xl"></i>
+                    </div>
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700/60" id="count-slate">0 مشاريع</span>
+                </div>
+                <h3 class="text-lg font-bold text-white group-hover:text-slate-200 transition-colors">المشروعات القديمة</h3>
+                <p class="text-xs text-slate-400 mt-2 leading-relaxed">عرض أرشيف السجلات، العقود القديمة، والبيانات التراكمية السابقة.</p>
+                
+                <div class="mt-6 flex items-center justify-between text-xs text-slate-400 pt-4 border-t border-slate-800/80">
+                    <span class="group-hover:translate-x-[-4px] transition-transform flex items-center gap-1.5 text-slate-300">
+                        عرض التفاصيل <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                    </span>
+                    <i class="fa-solid fa-clock-rotate-left opacity-40"></i>
+                </div>
+            </div>
+
+            <!-- Card 2: المشروعات الجديدة المعتمدة -->
+            <div onclick="openDrawer('المشروعات الجديدة (المعتمدة)', 'emerald')" 
+                 class="glass-card glow-emerald rounded-3xl p-6 cursor-pointer relative overflow-hidden group">
+                <div class="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-950/60 border border-emerald-800/50 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-inner">
+                        <i class="fa-solid fa-circle-check text-xl"></i>
+                    </div>
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-950/80 text-emerald-300 border border-emerald-800/60" id="count-emerald">0 مشاريع</span>
+                </div>
+                <h3 class="text-lg font-bold text-white group-hover:text-emerald-200 transition-colors">المشروعات الجديدة (المعتمدة)</h3>
+                <p class="text-xs text-slate-400 mt-2 leading-relaxed">المشاريع التي تم تعميدها حديثاً وجاهزة للانطلاق وتوزيع الدفعات.</p>
+
+                <div class="mt-6 flex items-center justify-between text-xs text-emerald-400/80 pt-4 border-t border-slate-800/80">
+                    <span class="group-hover:translate-x-[-4px] transition-transform flex items-center gap-1.5 text-emerald-400">
+                        عرض التفاصيل <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                    </span>
+                    <i class="fa-solid fa-award opacity-40"></i>
+                </div>
+            </div>
+
+            <!-- Card 3: مشروعات تحت الحفر -->
+            <div onclick="openDrawer('مشروعات تحت الحفر', 'amber')" 
+                 class="glass-card glow-amber rounded-3xl p-6 cursor-pointer relative overflow-hidden group">
+                <div class="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-amber-400 to-orange-500"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-950/60 border border-amber-800/50 flex items-center justify-center text-amber-400 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-inner">
+                        <i class="fa-solid fa-person-digging text-xl"></i>
+                    </div>
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-950/80 text-amber-300 border border-amber-800/60" id="count-amber">0 مشاريع</span>
+                </div>
+                <h3 class="text-lg font-bold text-white group-hover:text-amber-200 transition-colors">مشروعات تحت الحفر</h3>
+                <p class="text-xs text-slate-400 mt-2 leading-relaxed">متابعة أعمال الحفر الميداني، التجهيزات الأولية وتهيئة الموقع.</p>
+
+                <div class="mt-6 flex items-center justify-between text-xs text-amber-400/80 pt-4 border-t border-slate-800/80">
+                    <span class="group-hover:translate-x-[-4px] transition-transform flex items-center gap-1.5 text-amber-400">
+                        عرض التفاصيل <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                    </span>
+                    <i class="fa-solid fa-truck-pickup opacity-40"></i>
+                </div>
+            </div>
+
+            <!-- Card 4: مشروعات قيد التنفيذ -->
+            <div onclick="openDrawer('مشروعات قيد التنفيذ', 'blue')" 
+                 class="glass-card glow-blue rounded-3xl p-6 cursor-pointer relative overflow-hidden group">
+                <div class="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-950/60 border border-blue-800/50 flex items-center justify-center text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
+                        <i class="fa-solid fa-gears text-xl"></i>
+                    </div>
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-blue-950/80 text-blue-300 border border-blue-800/60" id="count-blue">0 مشاريع</span>
+                </div>
+                <h3 class="text-lg font-bold text-white group-hover:text-blue-200 transition-colors">مشروعات قيد التنفيذ</h3>
+                <p class="text-xs text-slate-400 mt-2 leading-relaxed">المشاريع القائمة حالياً، متابعة سير الأعمال والدفعات المحصلة.</p>
+
+                <div class="mt-6 flex items-center justify-between text-xs text-blue-400/80 pt-4 border-t border-slate-800/80">
+                    <span class="group-hover:translate-x-[-4px] transition-transform flex items-center gap-1.5 text-blue-400">
+                        عرض التفاصيل <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                    </span>
+                    <i class="fa-solid fa-spinner animate-spin-slow opacity-40"></i>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Summary Highlights Box -->
+        <div class="mt-10 glass-panel rounded-3xl p-6 sm:p-8 border border-slate-800/80">
+            <h3 class="text-md font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-emerald-400"></i>
+                ملخص المبالغ والتحصيلات التقديرية
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                    <p class="text-xs text-slate-400">إجمالي المبالغ (بدون ضريبة)</p>
+                    <p class="text-xl font-extrabold text-blue-400 mt-1" id="sumNoTax">0 ر.س</p>
+                </div>
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                    <p class="text-xs text-slate-400">إجمالي المبالغ الشاملة</p>
+                    <p class="text-xl font-extrabold text-indigo-400 mt-1" id="sumTotal">0 ر.س</p>
+                </div>
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                    <p class="text-xs text-slate-400">إجمالي الدفعات الأولى المحصلة</p>
+                    <p class="text-xl font-extrabold text-emerald-400 mt-1" id="sumP1">0 ر.س</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+    <!-- SLIDE-OVER DRAWER (صفحة جانبية منزلقة) -->
+    <div id="drawerOverlay" class="drawer-overlay fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex justify-end">
+        
+        <!-- Drawer Body -->
+        <div id="drawerPanel" class="drawer-panel w-full lg:w-[92%] xl:w-[88%] h-full bg-slate-900 border-r border-slate-800 flex flex-col shadow-2xl relative">
+            
+            <!-- Drawer Header -->
+            <div class="p-5 sm:p-6 bg-slate-900/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-20">
+                <div class="flex items-center gap-3">
+                    <div id="drawerBadgeIcon" class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white" id="drawerTitle">تفاصيل المشاريع</h2>
+                        <p class="text-xs text-slate-400 mt-0.5" id="drawerSubtitle">سجل المشاريع الكامل والدفعات المعتمدة</p>
+                    </div>
+                </div>
+
+                <!-- Actions in Drawer Header -->
+                <div class="flex items-center gap-2">
+                    <button onclick="printTable()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors">
+                        <i class="fa-solid fa-print"></i>
+                        <span>طباعة / تصدير</span>
+                    </button>
+                    <button onclick="openAddProjectModal()" class="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-md shadow-blue-600/20">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>إضافة مشروع</span>
+                    </button>
+                    <button onclick="toggleFullscreenDrawer()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors" title="ملء الشاشة">
+                        <i class="fa-solid fa-expand" id="fullscreenIcon"></i>
+                    </button>
+                    <button onclick="closeDrawer()" class="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors ml-2" title="إغلاق">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Drawer Filters & Search Bar -->
+            <div class="p-4 bg-slate-950/40 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-4">
+                <div class="relative flex-1 min-w-[240px] max-w-md">
+                    <i class="fa-solid fa-magnifying-glass absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                    <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="بحث باسم العميل، المشروع، رقم التواصل..." 
+                           class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl pr-10 pl-4 py-2.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-400">تصفية سريعة:</span>
+                    <button onclick="filterByPayment('all')" class="px-3 py-1.5 rounded-lg text-xs bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700">الكل</button>
+                    <button onclick="filterByPayment('paid')" class="px-3 py-1.5 rounded-lg text-xs bg-emerald-950/50 text-emerald-300 border border-emerald-800/50 hover:bg-emerald-900/50">تم تحصيل دفعة الأولى</button>
+                </div>
+            </div>
+
+            <!-- Table Section Container -->
+            <div class="flex-1 overflow-auto p-4 sm:p-6" id="printableTableSection">
+                <div class="overflow-x-auto rounded-2xl border border-slate-800 shadow-xl bg-slate-950/50">
+                    <table class="w-full text-xs text-right text-slate-300 min-w-[1700px] border-collapse">
+                        <thead>
+                            <!-- Top Header Level -->
+                            <tr class="bg-slate-800/90 text-slate-200 border-b border-slate-700 font-bold">
+                                <th class="p-3 border-l border-slate-700/60 min-w-[130px] bg-slate-800" rowspan="2">اسم العميل</th>
+                                <th class="p-3 border-l border-slate-700/60 min-w-[140px] bg-slate-800" rowspan="2">اسم المشروع</th>
+                                <th class="p-3 border-l border-slate-700/60 min-w-[100px] bg-slate-800" rowspan="2">الموقع</th>
+                                <th class="p-3 border-l border-slate-700/60 min-w-[110px] bg-slate-800 text-emerald-400" rowspan="2">مبلغ بدون ضريبة</th>
+                                <th class="p-3 border-l border-slate-700/60 min-w-[110px] bg-slate-800 text-blue-400" rowspan="2">المبلغ إجمالي</th>
+                                <th class="p-3 border-l border-slate-700/60 min-w-[110px] bg-slate-800" rowspan="2">رقم التواصل</th>
+                                <th class="p-3 border-l border-slate-700/60 min-w-[130px] bg-slate-800" rowspan="2">حالة المشروع والمتابعة</th>
+                                <th class="p-3 border-l border-slate-700/60 min-w-[140px] bg-slate-800" rowspan="2">ملاحظات</th>
+                                <th class="p-2 border-l border-slate-700/60 text-center bg-amber-950/40 text-amber-300 border-b border-amber-800/50" colspan="14">
+                                    <i class="fa-solid fa-money-bill-wave ml-1"></i> الدفعات في حالة التعميد ( التحصيل )
+                                </th>
+                                <th class="p-3 min-w-[80px] bg-slate-800 text-center" rowspan="2">خيارات</th>
+                            </tr>
+                            <!-- Payments Sub-Header Level (Matches image structure) -->
+                            <tr class="bg-slate-900 text-amber-200/90 border-b border-slate-700 text-[11px] font-semibold text-center">
+                                <th class="p-2 border-l border-slate-700/50 bg-amber-950/20">الأولى</th>
+                                <th class="p-2 border-l border-slate-700/50 bg-slate-900/80">تاريخها</th>
+                                <th class="p-2 border-l border-slate-700/50 bg-amber-950/20">الثانية</th>
+                                <th class="p-2 border-l border-slate-700/50 bg-slate-900/80">تاريخها</th>
+                                <th class="p-2 border-l border-slate-700/50 bg-amber-950/20">الثالثة</th>
+                                <th class="p-2 border-l border-slate-700/50 bg-slate-900/80">تاريخها</th>
+                                <th class="p-2 border-l border-slate-700/50 bg-amber-950/20">الرابعة</th>
+                                <th class="p-2 border-l border-slate-700/50 bg-slate-900/80">تاريخها</th>
+                                <th class="p-2 border-l border-slate-700/50 bg-amber-950/20">الخامسة</th>
+                                <th class="p-2 border-l border-slate-700/50 bg-slate-900/80">تاريخها</th>
+                                <th class="p-2 border-l border-slate-700/50 bg-amber-950/20">السادسة</th>
+                                <th class="p-2 border-l border-slate-700/50 bg-slate-900/80">تاريخها</th>
+                                <th class="p-2 border-l border-slate-700/50 bg-amber-950/20">السابعة</th>
+                                <th class="p-2 border-l border-slate-700/50 bg-slate-900/80">تاريخها</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectsTableBody" class="divide-y divide-slate-800/80">
+                            <!-- Dynamic Rows Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Drawer Footer Stats -->
+            <div class="p-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                <span>المشاريع المعروضة: <strong id="visibleCount" class="text-white">0</strong></span>
+                <span class="text-slate-500">نظام متابعة المشاريع المطور © 2026</span>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ADD PROJECT MODAL -->
+    <div id="addModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden justify-center items-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-y-auto max-h-[90vh]">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-folder-plus text-blue-400"></i>
+                    إضافة مشروع جديد
+                </h3>
+                <button onclick="closeAddProjectModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="addProjectForm" onsubmit="saveProject(event)" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">فئة المشروع</label>
+                        <select id="newCategory" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                            <option value="المشروعات القديمة">المشروعات القديمة</option>
+                            <option value="المشروعات الجديدة (المعتمدة)">المشروعات الجديدة (المعتمدة)</option>
+                            <option value="مشروعات تحت الحفر">مشروعات تحت الحفر</option>
+                            <option value="مشروعات قيد التنفيذ" selected>مشروعات قيد التنفيذ</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">اسم العميل</label>
+                        <input type="text" id="newClient" required placeholder="مثال: شركة الكيلاني" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">اسم المشروع</label>
+                        <input type="text" id="newProjectName" required placeholder="مثال: مجمع سكني تجاري" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">الموقع</label>
+                        <input type="text" id="newLocation" placeholder="الرياض - حي النرجس" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">مبلغ بدون ضريبة</label>
+                        <input type="text" id="newAmountNoTax" placeholder="50,000" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">المبلغ إجمالي</label>
+                        <input type="text" id="newTotalAmount" placeholder="57,500" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">رقم التواصل</label>
+                        <input type="text" id="newPhone" placeholder="0500000000" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">حالة المشروع والمتابعة</label>
+                        <input type="text" id="newStatus" placeholder="معتمد / قيد المتابعة" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">ملاحظات</label>
+                    <textarea id="newNotes" rows="2" placeholder="أدخل أي ملاحظات إضافية هنا..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500"></textarea>
+                </div>
+
+                <!-- Payment 1 quick entry -->
+                <div class="p-3 bg-slate-950 rounded-2xl border border-slate-800 grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-amber-300 font-semibold mb-1">الدفعة الأولى</label>
+                        <input type="text" id="newP1" placeholder="مثال: 15,000" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-amber-300 font-semibold mb-1">تاريخ الدفعة الأولى</label>
+                        <input type="date" id="newD1" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white">
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800 flex justify-end gap-3">
+                    <button type="button" onclick="closeAddProjectModal()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">إلغاء</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/30">حفظ المشروع</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        // Sample Initial Data Structure (Matches Columns in Provided Spreadsheet)
+        let projectsData = [
+            {
+                id: 1,
+                category: "المشروعات القديمة",
+                client: "شركة الأمل للتطوير",
+                project: "برج الأمل السكني",
+                location: "الرياض - الصحافة",
+                amountNoTax: "120,000",
+                totalAmount: "138,000",
+                phone: "0551234567",
+                status: "مكتمل ومسلم",
+                notes: "تم إنهاء كافة المستحقات",
+                payments: [
+                    { p: "30,000", d: "2024-01-15" },
+                    { p: "30,000", d: "2024-04-10" },
+                    { p: "30,000", d: "2024-07-20" },
+                    { p: "48,000", d: "2024-11-05" },
+                    { p: "-", d: "-" },
+                    { p: "-", d: "-" },
+                    { p: "-", d: "-" }
+                ]
+            },
+            {
+                id: 2,
+                category: "المشروعات الجديدة (المعتمدة)",
+                client: "مؤسسة طه الكيلاني",
+                project: "مبنى الخدمات اللوجستية",
+                location: "جدة - المطار",
+                amountNoTax: "85,000",
+                totalAmount: "97,750",
+                phone: "0509876543",
+                status: "معتمد حديثاً",
+                notes: "في انتظار بدء التجهيزات",
+                payments: [
+                    { p: "20,000", d: "2026-02-01" },
+                    { p: "-", d: "-" },
+                    { p: "-", d: "-" },
+                    { p: "-", d: "-" },
+                    { p: "-", d: "-" },
+                    { p: "-", d: "-" },
+                    { p: "-", d: "-" }
+                ]
+            },
+            {
+                id: 3,
+                category: "مشروعات تحت الحفر",
+                client: "شركة البناء الحديث",
+                project: "مجمع الفلل الفاخرة",
+                location: "الدمام - الشاطئ",
+                amountNoTax: "210,000",
+                totalAmount: "241,500",
+                phone: "0543210987",
+                status: "جاري حفر الموقع",
+                notes: "تجهيز الآليات بالموقع",
+                payments: [
+                    { p: "50,000", d: "2026-03-10" },
+                    { p: "40,000", d: "2026-04-01" },
+                    { p: "-", d: "-" },
+                    { p: "-", d: "-" },
+                    { p: "-", d: "-" },
+                    { p: "-", d: "-" },
+                    { p: "-", d: "-" }
+                ]
+            },
+            {
+                id: 4,
+                category: "مشروعات قيد التنفيذ",
+                client: "مكتب الرؤية الهندسية",
+                project: "مركز الأعمال التجاري",
+                location: "الرياض - العليا",
+                amountNoTax: "350,000",
+                totalAmount: "402,500",
+                phone: "0567891234",
+                status: "تنفيذ الهيكل الخرساني",
+                notes: "سير الأعمال وفق الجدول",
+                payments: [
+                    { p: "100,000", d: "2026-01-05" },
+                    { p: "80,000", d: "2026-02-20" },
+                    { p: "80,000", d: "2026-03-30" },
+                    { p: "-", d: "-" },
+                    { p: "-", d: "-" },
+                    { p: "-", d: "-" },
+                    { p: "-", d: "-" }
+                ]
+            }
+        ];
+
+        let currentCategory = "";
+
+        // Initialize dashboard state
+        document.addEventListener("DOMContentLoaded", () => {
+            updateCountsAndStats();
+        });
+
+        function updateCountsAndStats() {
+            const countSlate = projectsData.filter(p => p.category === 'المشروعات القديمة').length;
+            const countEmerald = projectsData.filter(p => p.category === 'المشروعات الجديدة (المعتمدة)').length;
+            const countAmber = projectsData.filter(p => p.category === 'مشروعات تحت الحفر').length;
+            const countBlue = projectsData.filter(p => p.category === 'مشروعات قيد التنفيذ').length;
+
+            document.getElementById('count-slate').innerText = `${countSlate} مشاريع`;
+            document.getElementById('count-emerald').innerText = `${countEmerald} مشاريع`;
+            document.getElementById('count-amber').innerText = `${countAmber} مشاريع`;
+            document.getElementById('count-blue').innerText = `${countBlue} مشاريع`;
+
+            document.getElementById('totalProjectsCount').innerText = projectsData.length;
+
+            // Calculate sums
+            let totalNoTax = 0;
+            let totalOverall = 0;
+            let totalP1 = 0;
+
+            projectsData.forEach(p => {
+                let noTax = parseFloat(p.amountNoTax.replace(/,/g, '')) || 0;
+                let tot = parseFloat(p.totalAmount.replace(/,/g, '')) || 0;
+                let p1Val = parseFloat((p.payments[0]?.p || '0').replace(/,/g, '')) || 0;
+
+                totalNoTax += noTax;
+                totalOverall += tot;
+                totalP1 += p1Val;
+            });
+
+            document.getElementById('sumNoTax').innerText = totalNoTax.toLocaleString() + ' ر.س';
+            document.getElementById('sumTotal').innerText = totalOverall.toLocaleString() + ' ر.س';
+            document.getElementById('sumP1').innerText = totalP1.toLocaleString() + ' ر.س';
+        }
+
+        // Open Side Drawer logic
+        function openDrawer(categoryTitle, colorTheme) {
+            currentCategory = categoryTitle;
+            document.getElementById('drawerTitle').innerText = categoryTitle;
+            document.getElementById('searchInput').value = '';
+
+            const badge = document.getElementById('drawerBadgeIcon');
+            badge.className = 'w-10 h-10 rounded-xl flex items-center justify-center border ';
+
+            if (colorTheme === 'slate') {
+                badge.className += 'bg-slate-800 text-slate-300 border-slate-700';
+            } else if (colorTheme === 'emerald') {
+                badge.className += 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+            } else if (colorTheme === 'amber') {
+                badge.className += 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+            } else if (colorTheme === 'blue') {
+                badge.className += 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+            }
+
+            renderTableData(categoryTitle);
+
+            const overlay = document.getElementById('drawerOverlay');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDrawer() {
+            const overlay = document.getElementById('drawerOverlay');
+            overlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function renderTableData(category, filterText = '') {
+            const tbody = document.getElementById('projectsTableBody');
+            tbody.innerHTML = '';
+
+            let filtered = projectsData.filter(p => p.category === category);
+
+            if (filterText.trim() !== '') {
+                const term = filterText.toLowerCase();
+                filtered = filtered.filter(p => 
+                    p.client.toLowerCase().includes(term) ||
+                    p.project.toLowerCase().includes(term) ||
+                    p.location.toLowerCase().includes(term) ||
+                    p.phone.includes(term)
+                );
+            }
+
+            document.getElementById('visibleCount').innerText = filtered.length;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="23" class="p-8 text-center text-slate-500">
+                            <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-600"></i>
+                            <p class="text-sm">لا توجد مشاريع مسجلة لهذه الفئة حالياً</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            filtered.forEach((item) => {
+                // Ensure 7 payments array
+                let payList = item.payments || [];
+                while (payList.length < 7) {
+                    payList.push({ p: '-', d: '-' });
+                }
+
+                let paymentCells = '';
+                payList.slice(0, 7).forEach((pay) => {
+                    const isPaid = pay.p && pay.p !== '-';
+                    paymentCells += `
+                        <td class="p-2 border-l border-slate-800 text-center ${isPaid ? 'text-amber-300 font-bold bg-amber-950/20' : 'text-slate-500'}">${pay.p || '-'}</td>
+                        <td class="p-2 border-l border-slate-800 text-center text-[11px] text-slate-400">${pay.d || '-'}</td>
+                    `;
+                });
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/50 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-3 border-l border-slate-800 font-bold text-white">${item.client}</td>
+                    <td class="p-3 border-l border-slate-800 text-slate-200 font-semibold">${item.project}</td>
+                    <td class="p-3 border-l border-slate-800 text-slate-400">${item.location}</td>
+                    <td class="p-3 border-l border-slate-800 font-bold text-emerald-400">${item.amountNoTax} ر.س</td>
+                    <td class="p-3 border-l border-slate-800 font-bold text-blue-400">${item.totalAmount} ر.س</td>
+                    <td class="p-3 border-l border-slate-800 text-slate-300 font-mono text-[11px]">${item.phone}</td>
+                    <td class="p-3 border-l border-slate-800">
+                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                            ${item.status}
+                        </span>
+                    </td>
+                    <td class="p-3 border-l border-slate-800 text-slate-400 max-w-[150px] truncate" title="${item.notes}">${item.notes || '-'}</td>
+                    ${paymentCells}
+                    <td class="p-2 text-center">
+                        <button onclick="deleteProject(${item.id})" class="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors" title="حذف">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterTable() {
+            const val = document.getElementById('searchInput').value;
+            renderTableData(currentCategory, val);
+        }
+
+        function filterByPayment(type) {
+            if (type === 'all') {
+                renderTableData(currentCategory);
+            } else if (type === 'paid') {
+                const tbody = document.getElementById('projectsTableBody');
+                const rows = tbody.getElementsByTagName('tr');
+                // quick visual filter
+                renderTableData(currentCategory);
+            }
+        }
+
+        // Fullscreen Toggle
+        function toggleFullscreenDrawer() {
+            const panel = document.getElementById('drawerPanel');
+            const icon = document.getElementById('fullscreenIcon');
+            if (panel.classList.contains('lg:w-[92%]')) {
+                panel.classList.remove('lg:w-[92%]', 'xl:w-[88%]');
+                panel.classList.add('w-full');
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress');
+            } else {
+                panel.classList.add('lg:w-[92%]', 'xl:w-[88%]');
+                icon.classList.remove('fa-compress');
+                icon.classList.add('fa-expand');
+            }
+        }
+
+        // Modal controls
+        function openAddProjectModal() {
+            document.getElementById('addModal').classList.remove('hidden');
+            document.getElementById('addModal').classList.add('flex');
+        }
+
+        function closeAddProjectModal() {
+            document.getElementById('addModal').classList.add('hidden');
+            document.getElementById('addModal').classList.remove('flex');
+        }
+
+        function saveProject(e) {
+            e.preventDefault();
+            const cat = document.getElementById('newCategory').value;
+            const client = document.getElementById('newClient').value;
+            const project = document.getElementById('newProjectName').value;
+            const location = document.getElementById('newLocation').value || '-';
+            const amountNoTax = document.getElementById('newAmountNoTax').value || '0';
+            const totalAmount = document.getElementById('newTotalAmount').value || '0';
+            const phone = document.getElementById('newPhone').value || '-';
+            const status = document.getElementById('newStatus').value || 'معتمد';
+            const notes = document.getElementById('newNotes').value || '';
+
+            const p1 = document.getElementById('newP1').value || '-';
+            const d1 = document.getElementById('newD1').value || '-';
+
+            const newObj = {
+                id: Date.now(),
+                category: cat,
+                client,
+                project,
+                location,
+                amountNoTax,
+                totalAmount,
+                phone,
+                status,
+                notes,
+                payments: [
+                    { p: p1, d: d1 },
+                    { p: '-', d: '-' },
+                    { p: '-', d: '-' },
+                    { p: '-', d: '-' },
+                    { p: '-', d: '-' },
+                    { p: '-', d: '-' },
+                    { p: '-', d: '-' }
+                ]
+            };
+
+            projectsData.push(newObj);
+            updateCountsAndStats();
+            closeAddProjectModal();
+            document.getElementById('addProjectForm').reset();
+
+            // If drawer is open, refresh table
+            if (currentCategory) {
+                renderTableData(currentCategory);
+            }
+        }
+
+        function deleteProject(id) {
+            projectsData = projectsData.filter(p => p.id !== id);
+            updateCountsAndStats();
+            if (currentCategory) {
+                renderTableData(currentCategory);
+            }
+        }
+
+        function printTable() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
